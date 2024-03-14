@@ -1,0 +1,166 @@
+Program.Sub.ScreenSU.Start
+Gui.frmMoldInfo..Create
+Gui.frmMoldInfo..Caption("Mold Info")
+Gui.frmMoldInfo..Size(3540,3870)
+Gui.frmMoldInfo..MinX(0)
+Gui.frmMoldInfo..MinY(0)
+Gui.frmMoldInfo..Position(0,0)
+Gui.frmMoldInfo..BackColor(-2147483633)
+Gui.frmMoldInfo..MaxButton(False)
+Gui.frmMoldInfo..MousePointer(0)
+Gui.frmMoldInfo..Sizeable(False)
+Gui.frmMoldInfo..Event(UnLoad,frmMoldInfo_UnLoad)
+Gui.frmMoldInfo.lblThickness.Create(Label,"Wall Thickness",True,1230,255,0,330,135,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblMoldSize.Create(Label,"Size of Mold",True,1050,255,0,330,1995,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblMoldLength.Create(Label,"Length",True,675,255,0,510,2280,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblMoldWidth.Create(Label,"Width",True,675,255,0,510,2610,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblMoldHeight.Create(Label,"Height",True,675,255,0,510,2940,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblCycle.Create(Label,"Clycle/Bake Time",True,1410,255,0,330,495,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblLiftTable.Create(Label,"Lift Table?",True,1035,255,0,330,870,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblHeadMounted.Create(Label,"Head Mounted?",True,1350,255,0,330,1260,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.lblNumOfMolds.Create(Label,"Number of Molds",True,1350,255,0,330,1635,True,0,"Arial",8,-2147483633,0)
+Gui.frmMoldInfo.txtThickness.Create(TextBox,"0",True,1215,300,0,1800,45,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtThickness.NumericOnly(1)
+Gui.frmMoldInfo.txtCycle.Create(TextBox,"0",True,1215,300,0,1800,405,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtCycle.NumericOnly(1)
+Gui.frmMoldInfo.ddlLiftTable.Create(DropDownList)
+Gui.frmMoldInfo.ddlLiftTable.Size(570,330)
+Gui.frmMoldInfo.ddlLiftTable.Position(1800,765)
+Gui.frmMoldInfo.ddlHeadMounted.Create(DropDownList)
+Gui.frmMoldInfo.ddlHeadMounted.Size(570,330)
+Gui.frmMoldInfo.ddlHeadMounted.Position(1800,1155)
+Gui.frmMoldInfo.txtNumOfMolds.Create(TextBox,"0",True,1215,300,0,1800,1545,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtNumOfMolds.NumericOnly(1)
+Gui.frmMoldInfo.txtLength.Create(TextBox,"0",True,525,300,0,1200,2190,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtLength.NumericOnly(1)
+Gui.frmMoldInfo.txtWidth.Create(TextBox,"0",True,525,300,0,1200,2520,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtWidth.NumericOnly(1)
+Gui.frmMoldInfo.txtHeight.Create(TextBox,"0",True,525,300,0,1200,2850,True,0,"Arial",8,-2147483643,1)
+Gui.frmMoldInfo.txtHeight.NumericOnly(1)
+Gui.frmMoldInfo.cmdSave.Create(Button)
+Gui.frmMoldInfo.cmdSave.Size(855,375)
+Gui.frmMoldInfo.cmdSave.Position(2160,3090)
+Gui.frmMoldInfo.cmdSave.Caption("Save")
+Gui.frmMoldInfo.cmdSave.Event(Click,cmdSave_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+	V.Global.sGSSPart.Declare
+	V.Global.sGSSLoc.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sIcon.Declare
+	V.Local.sGSSPart.Declare
+	
+	F.Intrinsic.String.Build("{0}\gss2.ico",V.Caller.ArtDir,V.Local.sIcon)
+	Gui.frmMoldInfo..Icon(V.Local.sIcon)
+
+	F.Intrinsic.Control.SelectCase(V.Caller.Hook)
+		F.Intrinsic.Control.Case(10120)
+			V.Passed.000070.Set("Mold Info")			
+			F.Intrinsic.Control.End
+			
+		F.Intrinsic.Control.Case(10230)
+			F.ODBC.Connection!con.OpenCompanyConnection(300)
+			F.Intrinsic.Control.CallSub(LoadDropDowns)
+			F.Intrinsic.String.GSSPartString(V.Passed.000007,V.Passed.000008,V.Global.sGSSPart)
+			V.Global.sGSSLoc.Set(V.Passed.000009)
+			F.Intrinsic.Control.CallSub(GetMoldInfo)
+			
+	F.Intrinsic.Control.EndSelect
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.frmMoldInfo_UnLoad.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	F.ODBC.Connection!con.Close
+	F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.frmMoldInfo_UnLoad.End
+
+Program.Sub.LoadDropDowns.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	Gui.frmMoldInfo.ddlLiftTable.AddItem("N",0)
+	Gui.frmMoldInfo.ddlLiftTable.AddItem("Y",1)
+	Gui.frmMoldInfo.ddlLiftTable.Text("N")
+	
+	Gui.frmMoldInfo.ddlHeadMounted.AddItem("N",0)
+	Gui.frmMoldInfo.ddlHeadMounted.AddItem("Y",1)
+	Gui.frmMoldInfo.ddlHeadMounted.Text("N")
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDropDowns.End
+
+Program.Sub.GetMoldInfo.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSQL.Declare
+	
+	F.Intrinsic.String.Build("SELECT * FROM GAB_5361_MOLD_INFO WHERE PART = '{0}' AND LOCATION = '{1}';",V.Global.sGSSPart,V.Global.sGSSLoc,V.Local.sSQL)
+	F.Data.DataTable.CreateFromSQL("dtMoldInfo","con",V.Local.sSQL,True)
+	F.Intrinsic.Control.If(V.DataTable.dtMoldInfo.RowCount,<>,0)
+		Gui.frmMoldInfo.txtThickness.Text(V.DataTable.dtMoldInfo(0).THICKNESS!FieldVal)
+		Gui.frmMoldInfo.txtCycle.Text(V.DataTable.dtMoldInfo(0).CYCLE_TIME!FieldVal)
+		Gui.frmMoldInfo.ddlLiftTable.Text(V.DataTable.dtMoldInfo(0).LIFT_TABLE!FieldVal)
+		Gui.frmMoldInfo.ddlHeadMounted.Text(V.DataTable.dtMoldInfo(0).HEAD_MOUNT!FieldVal)
+		Gui.frmMoldInfo.txtNumOfMolds.Text(V.DataTable.dtMoldInfo(0).NUM_OF_MOLDS!FieldVal)
+		Gui.frmMoldInfo.txtLength.Text(V.DataTable.dtMoldInfo(0).MOLD_LENGTH!FieldVal)
+		Gui.frmMoldInfo.txtWidth.Text(V.DataTable.dtMoldInfo(0).MOLD_WIDTH!FieldVal)
+		Gui.frmMoldInfo.txtHeight.Text(V.DataTable.dtMoldInfo(0).MOLD_HEIGHT!FieldVal)
+	F.Intrinsic.Control.EndIf
+	
+	Gui.frmMoldInfo..Show
+	Gui.frmMoldInfo.txtThickness.SetFocus
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.GetMoldInfo.End
+
+Program.Sub.cmdSave_Click.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	F.Intrinsic.Control.If(V.DataTable.dtMoldInfo.RowCount,=,0)
+		F.Data.DataTable.AddRow("dtMoldInfo","PART",V.Global.sGSSPart,"LOCATION",V.Global.sGSSLoc,"THICKNESS",V.Screen.frmMoldInfo!txtThickness.Text,"CYCLE_TIME",V.Screen.frmMoldInfo!txtCycle.Text,"LIFT_TABLE",V.Screen.frmMoldInfo!ddlLiftTable.Value,"HEAD_MOUNT",V.Screen.frmMoldInfo!ddlHeadMounted.Value,"NUM_OF_MOLDS",V.Screen.frmMoldInfo!txtNumOfMolds.Text,"MOLD_LENGTH",V.Screen.frmMoldInfo!txtLength.Text,"MOLD_WIDTH",V.Screen.frmMoldInfo!txtWidth.Text,"MOLD_HEIGHT",V.Screen.frmMoldInfo!txtHeight.Text)
+	F.Intrinsic.Control.Else
+		F.Data.DataTable.SetValue("dtMoldInfo",0,"THICKNESS",V.Screen.frmMoldInfo!txtThickness.Text,"CYCLE_TIME",V.Screen.frmMoldInfo!txtCycle.Text,"LIFT_TABLE",V.Screen.frmMoldInfo!ddlLiftTable.Value,"HEAD_MOUNT",V.Screen.frmMoldInfo!ddlHeadMounted.Value,"NUM_OF_MOLDS",V.Screen.frmMoldInfo!txtNumOfMolds.Text,"MOLD_LENGTH",V.Screen.frmMoldInfo!txtLength.Text,"MOLD_WIDTH",V.Screen.frmMoldInfo!txtWidth.Text,"MOLD_HEIGHT",V.Screen.frmMoldInfo!txtHeight.Text)
+	F.Intrinsic.Control.EndIf
+	
+	F.Data.DataTable.SaveToDB("dtMoldInfo","con","GAB_5361_MOLD_INFO","PART*!*LOCATION")
+	F.Intrinsic.Control.CallSub(frmMoldInfo_UnLoad)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.cmdSave_Click.End
+
+Program.Sub.Comments.Start
+Program.Sub.Comments.End
