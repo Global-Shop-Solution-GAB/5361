@@ -1,0 +1,412 @@
+Program.Sub.ScreenSU.Start
+Gui.frmDispatch..Create
+Gui.frmDispatch..Caption("Molding Dispatch")
+Gui.frmDispatch..Size(15240,7755)
+Gui.frmDispatch..MinX(0)
+Gui.frmDispatch..MinY(0)
+Gui.frmDispatch..Position(0,0)
+Gui.frmDispatch..BackColor(-2147483633)
+Gui.frmDispatch..MousePointer(0)
+Gui.frmDispatch..Event(UnLoad,frmDispatch_UnLoad)
+Gui.frmDispatch.lblWC.Create(Label,"Workcenters",True,1275,255,0,30,105,True,0,"Arial",8,-2147483633,0)
+Gui.frmDispatch.lblWC.FontStyle(True,False,False,False,False)
+Gui.frmDispatch.GsGCWCs.Create(GsGridControl)
+Gui.frmDispatch.GsGCWCs.Size(3900,7110)
+Gui.frmDispatch.GsGCWCs.Position(30,315)
+Gui.frmDispatch.GsGCWCs.Anchor(7)
+Gui.frmDispatch.GsGCWCs.Event(RowCellClick,GsGCWCs_RowCellClick)
+Gui.frmDispatch.GsGCDispatch.Create(GsGridControl)
+Gui.frmDispatch.GsGCDispatch.Size(11145,7110)
+Gui.frmDispatch.GsGCDispatch.Position(3960,315)
+Gui.frmDispatch.GsGCDispatch.Anchor(15)
+Gui.frmDispatch.GsGCDispatch.Event(RowCellClick,GsGCDispatch_RowCellClick)
+Gui.frmDispatch.GsGCDispatch.Event(CellValueChanged,GsGCDispatch_CellValueChanged)
+Gui.frmDispatch.cmdSave.Create(Button)
+Gui.frmDispatch.cmdSave.Enabled(False)
+Gui.frmDispatch.cmdSave.Visible(False)
+Gui.frmDispatch.cmdSave.Size(855,375)
+Gui.frmDispatch.cmdSave.Position(14250,7470)
+Gui.frmDispatch.cmdSave.Caption("Save")
+Gui.frmDispatch.lblDispath.Create(Label,"Dispatch List",True,1275,255,0,3960,105,True,0,"Arial",8,-2147483633,0)
+Gui.frmDispatch.lblDispath.FontStyle(True,False,False,False,False)
+Gui.frmDispatch.cmdRefresh.Create(Button)
+Gui.frmDispatch.cmdRefresh.Size(540,285)
+Gui.frmDispatch.cmdRefresh.Position(3390,15)
+Gui.frmDispatch.cmdRefresh.Caption("REFRESH")
+Gui.frmDispatch.cmdRefresh.Event(Click,cmdRefresh_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+	V.Global.sGsGCIcon.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	'Set Logo in GsGridControl Group Header
+	F.Intrinsic.String.Build("{0}\GAB_GSS_Logo_Green_Dash.png",V.Caller.ArtDir,V.Global.sGsGCIcon)
+	
+	F.ODBC.Connection!con.OpenCompanyConnection(300)
+	
+	F.Intrinsic.Control.CallSub(SetContextMenus)
+	F.Intrinsic.Control.CallSub(LoadWorkcenters)
+	
+	Gui.frmDispatch..Show
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.frmDispatch_UnLoad.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	F.ODBC.Connection!con.Close
+	F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.frmDispatch_UnLoad.End
+
+Program.Sub.SetContextMenus.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	Gui.frmDispatch..ContextMenuCreate("CTXWC")
+	Gui.frmDispatch.GsGCWCs.ContextMenuAttach("CTXWC")
+	Gui.frmDispatch..ContextMenuAddItem("CTXWC","SELALL",0,"Select All")
+	Gui.frmDispatch..ContextMenuAddItem("CTXWC","DESELALL",0,"Deselect All")
+	Gui.frmDispatch..ContextMenuSetItemEventHandler("CTXWC","SELALL","MenuClick")
+	Gui.frmDispatch..ContextMenuSetItemEventHandler("CTXWC","DESELALL","MenuClick")
+	
+	Gui.frmDispatch..ContextMenuCreate("CTXDISP")
+	Gui.frmDispatch.GsGCDispatch.ContextMenuAttach("CTXDISP")
+	Gui.frmDispatch..ContextMenuAddItem("CTXDISP","Refresh",0,"Refresh")
+	Gui.frmDispatch..ContextMenuAddItem("CTXDISP","Export",0,"Export")
+	Gui.frmDispatch..ContextMenuSetItemEventHandler("CTXDISP","Refresh","MenuClick")
+	Gui.frmDispatch..ContextMenuSetItemEventHandler("CTXDISP","Export","MenuClick")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.SetContextMenus.End
+
+Program.Sub.MenuClick.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sFileExport.Declare
+	V.Local.bExcel.Declare
+	V.Local.bFileLocked.Declare
+	V.Local.sMsg.Declare
+	V.Local.sExt.Declare
+	V.Local.sGAB.Declare
+
+	F.Intrinsic.Control.SelectCase(V.Args.ItemName)
+		F.Intrinsic.Control.Case("SELALL")
+			F.Data.DataTable.SetValue("dtWCs",-1,"SEL",True)
+			
+		F.Intrinsic.Control.Case("DESELALL")
+			F.Data.DataTable.SetValue("dtWCs",-1,"SEL",False)
+			
+		F.Intrinsic.Control.Case("REFRESH")
+			F.Intrinsic.Control.CallSub(cmdRefresh_Click)
+			
+		F.Intrinsic.Control.Case("EXPORT")
+			F.Automation.MSExcel.CheckPresence(V.Local.bExcel)
+			F.Intrinsic.Control.If(V.Local.bExcel)
+				V.Local.sExt.Set("xlsx")
+			F.Intrinsic.Control.Else
+				V.Local.sExt.Set("csv")
+			F.Intrinsic.Control.EndIf
+			
+			F.Intrinsic.String.Build("{0}\GAB_5361_Dispatch_Export.{1}",V.Caller.LocalGssTempDir,V.Local.sExt,V.Local.sFileExport)
+			F.Intrinsic.File.IsFileLocked(V.Local.sFileExport,V.Local.bFileLocked)
+			F.Intrinsic.Control.If(V.Local.bFileLocked)
+				F.Intrinsic.String.Build("File is already open. Please close and export again.{0}File: {1}",V.Ambient.NewLine,V.Local.sFileExport,V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File In Use")
+			F.Intrinsic.Control.Else
+				Gui.frmDispatch.GsGCDispatch.Export(V.Local.sFileExport,V.Local.sExt)
+				F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+			F.Intrinsic.Control.EndIf
+			
+	F.Intrinsic.Control.EndSelect
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.MenuClick.End
+
+Program.Sub.LoadWorkcenters.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iCnt.Declare
+	V.Local.sColumns.Declare
+
+	F.Data.DataTable.CreateFromSQL("dtWCs","con","SELECT CAST(0 AS BIT) AS SEL,RTRIM(MACHINE) AS WC,RTRIM(WC_NAME) AS WC_NAME FROM WORKCENTERS WHERE MACHINE LIKE 'M__' ORDER BY WC;",True)
+	
+	Gui.frmDispatch.GsGCWCs.AddGridviewFromDatatable("gvWCs","dtWCs")
+	Gui.frmDispatch.GsGCWCs.Icon(V.Global.sGsGCIcon)
+	Gui.frmDispatch.GsGCWCs.SuspendLayout()
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","MultiSelect",True)
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","AllowSort",False)
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","AllowFilter",True)
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","OptionsDetailShowDetailTabs",False)
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","OptionsViewShowGroupPanel",False)
+	Gui.frmDispatch.GsGCWCs.SetGridViewProperty("gvWCs","EnableAppearanceOddRow",True)
+	
+	'Loop through columns names by using the V.DataTable.dtName.FieldNames
+	F.Intrinsic.String.Split(V.DataTable.dtWCs.FieldNames,"*!*",V.Local.sColumns)
+	F.Intrinsic.Control.For(V.Local.iCnt,0,V.Local.sColumns.UBound,1)
+		Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs",V.Local.sColumns(V.Local.iCnt),"HeaderFontBold",True)
+	F.Intrinsic.Control.Next(V.Local.iCnt)
+	
+	'SEL
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","Caption","Select")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","MinWidth","45")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","MaxWidth","45")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","AllowEdit",True)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","ReadOnly",False)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","SEL","CellHAlignment","Center")
+	
+	'WC
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","Caption","Workcenter")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","MinWidth","75")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","MaxWidth","75")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","AllowEdit",False)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","ReadOnly",True)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC","CellHAlignment","Center")
+	
+	'WC_NAME
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","Caption","Description")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","MinWidth","105")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","AllowEdit",False)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","ReadOnly",True)
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","HeaderHAlignment","Left")
+	Gui.frmDispatch.GsGCWCs.SetColumnProperty("gvWCs","WC_NAME","CellHAlignment","Left")
+	
+	Gui.frmDispatch.GsGCWCs.ResumeLayout()
+	Gui.frmDispatch.GsGCWCs.MainView("gvWCs")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadWorkcenters.End
+
+Program.Sub.cmdRefresh_Click.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sWCs.Declare
+	V.Local.iCnt.Declare
+	V.Local.sSelect.Declare
+	
+	F.Data.DataTable.Select("dtWCs","SEL = True",V.Local.sSelect)
+	F.Intrinsic.Control.If(V.Local.sSelect.IsNoReturn)
+		F.Intrinsic.UI.Msgbox("No Workcenters selected.","Load Dispatch List")
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Split(V.Local.sSelect,"*!*",V.Local.sSelect)
+		F.Intrinsic.Control.For(V.Local.iCnt,0,V.Local.sSelect.UBound,1)
+			F.Intrinsic.Control.If(V.Local.iCnt,=,0)
+				F.Intrinsic.String.Build("'{0}'",V.DataTable.dtWCs(V.Local.sSelect(V.Local.iCnt)).WC!FieldVal,V.Local.sWCs)
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("{0},'{1}'",V.Local.sWCs,V.DataTable.dtWCs(V.Local.sSelect(V.Local.iCnt)).WC!FieldVal,V.Local.sWCs)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Next(V.Local.iCnt)
+		'Load Dispatch with WC List
+		F.Intrinsic.Control.CallSub(LoadDisptach,"WCs",V.Local.sWCs)
+	F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.cmdRefresh_Click.End
+
+Program.Sub.LoadDisptach.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sSQL.Declare
+	V.Local.iCnt.Declare
+	V.Local.sColumns.Declare
+	
+	F.Intrinsic.String.Build("SELECT B.CUSTOMER,D.NAME_CUSTOMER,A.JOB,A.SUFFIX,B.QTY_ORDER,B.QTY_ORDER-B.QTY_COMPLETED AS QTY_REM,B.PART,B.LOCATION,B.DESCRIPTION,A.SEQ,RTRIM(A.PART) AS WC,A.DESCRIPTION AS WC_DESC,C.NUM_OF_MOLDS,C.CYCLE_TIME,A.DATE_DUE FROM V_JOB_OPERATIONS A JOIN V_JOB_HEADER B ON A.JOB = B.JOB AND A.SUFFIX = B.SUFFIX LEFT JOIN GAB_5361_MOLD_INFO C ON B.PART = C.PART AND B.LOCATION = C.LOCATION LEFT JOIN V_CUSTOMER_MASTER D ON B.CUSTOMER = D.CUSTOMER WHERE A.LMO = 'L' AND A.PART IN ({0});",V.Args.WCs,V.Local.sSQL)
+
+	F.Data.DataTable.CreateFromSQL("dtDisptach","con",V.Local.sSQL,True)
+	
+	Gui.frmDispatch.GsGCDispatch.AddGridviewFromDatatable("gvDisptach","dtDisptach")
+	Gui.frmDispatch.GsGCDispatch.Icon(V.Global.sGsGCIcon)
+	Gui.frmDispatch.GsGCDispatch.SuspendLayout()
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","MultiSelect",True)
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","AllowSort",True)
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","AllowFilter",True)
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","OptionsDetailShowDetailTabs",False)
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","OptionsViewShowGroupPanel",True)
+	Gui.frmDispatch.GsGCDispatch.SetGridViewProperty("gvDisptach","EnableAppearanceOddRow",True)
+	
+	'Loop through columns names by using the V.DataTable.dtName.FieldNames
+	F.Intrinsic.String.Split(V.DataTable.dtDisptach.FieldNames,"*!*",V.Local.sColumns)
+	F.Intrinsic.Control.For(V.Local.iCnt,0,V.Local.sColumns.UBound,1)
+		Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach",V.Local.sColumns(V.Local.iCnt),"HeaderFontBold",True)
+	F.Intrinsic.Control.Next(V.Local.iCnt)
+	
+	'CUSTOMER
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","Caption","Cust No")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","MinWidth","65")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CUSTOMER","CellHAlignment","Center")
+	
+	'NAME_CUSTOMER
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","Caption","Cust Name")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","MinWidth","125")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","HeaderHAlignment","Left")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NAME_CUSTOMER","CellHAlignment","Left")
+	
+	'JOB
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","Caption","Job")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","MinWidth","65")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","JOB","CellHAlignment","Center")
+	
+	'SUFFIX
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","Caption","Suffix")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","MinWidth","55")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SUFFIX","CellHAlignment","Center")
+	
+	'QTY_ORDER
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","Caption","Order Qty")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","MinWidth","85")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","HeaderHAlignment","Far")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_ORDER","CellHAlignment","Far")
+	
+	'QTY_REM
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","Caption","Rem Qty")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","MinWidth","85")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","HeaderHAlignment","Far")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","QTY_REM","CellHAlignment","Far")
+	
+	'PART
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","Caption","Part")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","MinWidth","100")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","HeaderHAlignment","Left")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","PART","CellHAlignment","Left")
+	
+	'LOCATION
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","Caption","Loc")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","MinWidth","35")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","LOCATION","CellHAlignment","Center")
+	
+	'DESCRIPTION
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","Caption","Description")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","MinWidth","125")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","HeaderHAlignment","Left")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DESCRIPTION","CellHAlignment","Left")
+	
+	'SEQ
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","Caption","Seq")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","MinWidth","45")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","SEQ","CellHAlignment","Center")
+	
+	'WC
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","Caption","WC")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","MinWidth","65")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC","CellHAlignment","Center")
+	
+	'WC_DESC
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","Caption","WC Desc")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","MinWidth","115")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","HeaderHAlignment","Left")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","WC_DESC","CellHAlignment","Left")
+	
+	'NUM_OF_MOLDS
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","Caption","Num of Molds")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","MinWidth","85")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","NUM_OF_MOLDS","CellHAlignment","Center")
+	
+	'CYCLE_TIME
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","Caption","Cycle/Bake Time")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","MinWidth","105")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","HeaderHAlignment","Far")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","CYCLE_TIME","CellHAlignment","Far")
+	
+	'DATE_DUE
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","Caption","Due Date")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","MinWidth","85")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","AllowEdit",False)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","ReadOnly",True)
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","HeaderHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","CellHAlignment","Center")
+	Gui.frmDispatch.GsGCDispatch.SetColumnProperty("gvDisptach","DATE_DUE","DisplayCustomDateTime","d")
+	
+	Gui.frmDispatch.GsGCDispatch.ResumeLayout()
+	Gui.frmDispatch.GsGCDispatch.MainView("gvDisptach")
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDisptach.End
+
+Program.Sub.GsGCWCs_RowCellClick.Start
+Program.Sub.GsGCWCs_RowCellClick.End
+
+Program.Sub.GsGCDispatch_RowCellClick.Start
+Program.Sub.GsGCDispatch_RowCellClick.End
+
+Program.Sub.GsGCDispatch_CellValueChanged.Start
+Program.Sub.GsGCDispatch_CellValueChanged.End
+
+Program.Sub.Comments.Start
+Program.Sub.Comments.End
